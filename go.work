@@ -1,0 +1,10 @@
+go 1.23.0
+
+use (
+	./auth
+	./chat
+	./gateway
+	./notification
+	./subscriber
+	./user
+)
