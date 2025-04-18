@@ -1,0 +1,32 @@
+# Binaries files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Local configuration files
+.env
+.env.local
+*.local.yaml
+*.local.yml
+
+# IDE
+.github
+.vscode
+.idea
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+**/tmp/
+**/temp/
+
+# Logs
+**/logs/
+**/*.log
+
+# Test binary, build with `go test -c`
+*.test
