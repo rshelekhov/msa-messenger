@@ -1,0 +1,121 @@
+version: "3.8"
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=auth_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  user:
+    build:
+      context: .
+      dockerfile: user/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=user_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  chat:
+    build:
+      context: .
+      dockerfile: chat/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=chat_db
+      - REDIS_URL=redis:6379
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+
+  subscriber:
+    build:
+      context: .
+      dockerfile: subscriber/Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - REDIS_URL=redis:6379
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - redis
+      - rabbitmq
+
+  notification:
+    build:
+      context: .
+      dockerfile: notification/Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=notification_db
+      - REDIS_URL=redis:6379
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://auth:8081
+      - USER_SERVICE_URL=http://user:8082
+      - CHAT_SERVICE_URL=http://chat:8083
+      - SUBSCRIBER_SERVICE_URL=http://subscriber:8084
+      - NOTIFICATION_SERVICE_URL=http://notification:8085
+    depends_on:
+      - auth
+      - user
+      - chat
+      - subscriber
+      - notification
+
+  mongodb:
+    image: mongo:5
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
