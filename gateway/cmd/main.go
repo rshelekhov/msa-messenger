@@ -1,75 +1,47 @@
 package main
 
 import (
-	"context"
-	"log"
-	"net/http"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-)
-
-const (
-	ServiceName = "gateway"
-	ServicePort = "8080"
+	"github.com/rshelekhov/msa-messenger/gateway/internal/app"
+	"github.com/rshelekhov/msa-messenger/gateway/internal/config"
+	"github.com/rshelekhov/msa-messenger/gateway/internal/lib/logger"
 )
 
 func main() {
-	r := chi.NewRouter()
+	cfg := config.MustLoad()
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	log := logger.SetupLogger(cfg.AppEnv)
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"OK"}`))
-	})
+	log = log.With(slog.String("env", cfg.AppEnv))
 
-	r.Get("/ready", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"OK"}`))
-	})
+	log.Info("starting application")
+	log.Debug("logger debug mode enabled")
 
-	r.Get("/hello/gateway", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello from API Gateway!"))
-	})
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = ServicePort
-	}
-
-	log.Printf("Starting %s service on port %s", ServiceName, port)
-
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: r,
+	application, err := app.New(cfg, log)
+	if err != nil {
+		log.Error("failed to initialize application", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
+		application.HTTPServer.MustRun()
 	}()
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	<-sigChan
+	// Graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
-	log.Printf("Shutting down %s service...", ServiceName)
+	sign := <-stop
+	log.Info("shutting down...", slog.String("signal", sign.String()))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+	if err := application.Stop(); err != nil {
+		log.Error("failed to stop application", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
-	log.Printf("Server for %s service exiting", ServiceName)
+	log.Info("graceful shutdown completed")
 }
