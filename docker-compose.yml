@@ -81,18 +81,22 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - AUTH_SERVICE_URL=http://auth:8081
-      - USER_SERVICE_URL=http://user:8082
-      - CHAT_SERVICE_URL=http://chat:8083
-      - SUBSCRIBER_SERVICE_URL=http://subscriber:8084
-      - NOTIFICATION_SERVICE_URL=http://notification:8085
+      - CONFIG_PATH=/src/config/.env
     depends_on:
       - auth
       - user
       - chat
       - subscriber
       - notification
-
+    volumes:
+      - ./gateway/config:/src/config
+    command: >
+      sh -c "
+        if [ ! -f /src/config/.env ]; then
+          cp /src/config/.env.example /src/config/.env
+        fi
+        make ./app
+      "
   mongodb:
     image: mongo:5
     ports:
