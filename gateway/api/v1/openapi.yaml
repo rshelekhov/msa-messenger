@@ -1,0 +1,1124 @@
+openapi: "3.0.0"
+info:
+  title: API Gateway
+  version: "0.1.0"
+
+servers:
+  - url: https://localhost:8080/v1
+    description: Main API server
+
+paths:
+  /auth/login:
+    post:
+      summary: "Login"
+      description: "Login to the application"
+      tags:
+        - "auth"
+      parameters:
+        - $ref: "#/components/parameters/clientType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Contains refresh_token cookies (for web clients only)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/LoginResponseWeb"
+                  - $ref: "#/components/schemas/LoginResponseMobile"
+        "401":
+          description: Unauthorized if invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register:
+    post:
+      summary: "Register"
+      description: "Register a new user"
+      tags:
+        - "auth"
+      parameters:
+        - $ref: "#/components/parameters/clientType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Created
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Contains refresh_token cookies (for web clients only)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RegisterResponseWeb"
+                  - $ref: "#/components/schemas/RegisterResponseMobile"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refresh:
+    post:
+      summary: "Refresh"
+      description: "Refresh the access token"
+      tags:
+        - "auth"
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequestMobile"
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Contains refresh_token cookies (for web clients only)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RefreshTokenResponseWeb"
+                  - $ref: "#/components/schemas/RefreshTokenResponseMobile"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      summary: "Logout"
+      description: "Logout from the application"
+      tags:
+        - "auth"
+      security:
+        - Bearer: []
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me:
+    get:
+      summary: "Get Own Profile"
+      description: "Get own profile information"
+      tags:
+        - "user"
+      security:
+        - Bearer: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: "Update Own Profile"
+      description: "Update own profile information (name, email)"
+      tags:
+        - "user"
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOwnProfileRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: "Delete User"
+      description: "Delete user profile"
+      tags:
+        - "user"
+      security:
+        - Bearer: []
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/search:
+    get:
+      summary: "Search Users"
+      description: "Search for users by name"
+      tags:
+        - "user"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/searchQuery"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /friends:
+    get:
+      summary: "Get Friends"
+      description: "Get friends list with pagination"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FriendsResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /friends/{id}:
+    get:
+      summary: "Get Friend"
+      description: "Get a friend's profile"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/friendId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FriendResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: "Delete Friend"
+      description: "Delete a friend"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/friendId"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /friends/{id}/invite:
+    post:
+      summary: "Invite Friend"
+      description: "Invite a friend to the application"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/friendId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteFriendRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteFriendResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /friend-invites/{id}/accept:
+    patch:
+      summary: "Accept Friend Invite"
+      description: "Accept a pending friend invite"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/inviteId"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /friend-invites/{id}/decline:
+    patch:
+      summary: "Decline Friend Invite"
+      description: "Decline a pending friend invite"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/inviteId"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /friend-invites:
+    get:
+      summary: "Get Friend Invites"
+      description: "Get list of friend invites with filtering and pagination"
+      tags:
+        - "subscriber"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/inviteDirection"
+        - $ref: "#/components/parameters/inviteStatus"
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitesResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /chats:
+    get:
+      summary: "Get Chats"
+      description: "Get chats"
+      tags:
+        - "chat"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /chats/{id}:
+    post:
+      summary: "Send Message"
+      description: "Send a message to a chat"
+      tags:
+        - "chat"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/chatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: "Get Chat Messages"
+      description: "Get chat messages"
+      tags:
+        - "chat"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/chatId"
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessagesResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: "Delete Chat"
+      description: "Delete a chat"
+      tags:
+        - "chat"
+      security:
+        - Bearer: []
+      parameters:
+        - $ref: "#/components/parameters/chatId"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT token in Authorization header"
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "Error title"
+        description:
+          type: string
+          description: "Error description"
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: "Email must be a valid email address"
+          x-oapi-codegen-extra-tags:
+            validate: "required,email,min=5,max=255"
+        password:
+          type: string
+          format: password
+          description: "Password must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)"
+          pattern: "^[A-Za-z\\d@$!%*?&]{8,}$"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=8,max=255,password_regexp"
+      required:
+        - email
+        - password
+    LoginResponseWeb:
+      type: object
+      description: "Token response for web clients. Additional fields can be included in the response"
+      properties:
+        access_token:
+          type: string
+          description: "Access token"
+      additionalProperties: true
+    LoginResponseMobile:
+      type: object
+      description: "Token response for mobile clients. Additional fields can be included in the response"
+      properties:
+        access_token:
+          type: string
+          description: "Access token"
+        refresh_token:
+          type: string
+          description: "Refresh token"
+      additionalProperties: true
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: "Email must be a valid email address"
+          x-oapi-codegen-extra-tags:
+            validate: "required,email,min=5,max=255"
+        password:
+          type: string
+          format: password
+          description: "Password must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)"
+          pattern: "^[A-Za-z\\d@$!%*?&]{8,}$"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=8,max=255,password_regexp"
+        name:
+          type: string
+          description: "Name must be a string between 1 and 255 characters"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1,max=255"
+      required:
+        - email
+        - password
+        - name
+    RegisterResponseWeb:
+      type: object
+      description: "User data and token response for web clients. Additional fields can be included in the response"
+      properties:
+        id:
+          type: string
+          description: "User ID"
+        name:
+          type: string
+          description: "User name"
+        email:
+          type: string
+          description: "User email"
+        access_token:
+          type: string
+          description: "Access token"
+      additionalProperties: true
+    RegisterResponseMobile:
+      type: object
+      description: "User data and token response for mobile clients. Additional fields can be included in the response"
+      properties:
+        id:
+          type: string
+          description: "User ID"
+        name:
+          type: string
+          description: "User name"
+        email:
+          type: string
+          description: "User email"
+        access_token:
+          type: string
+          description: "Access token"
+        refresh_token:
+          type: string
+          description: "Refresh token"
+      additionalProperties: true
+    RefreshTokenRequestMobile:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "required"
+      required:
+        - refresh_token
+    RefreshTokenResponseWeb:
+      type: object
+      description: "Token response for web clients. Additional fields can be included in the response"
+      properties:
+        access_token:
+          type: string
+          description: "Access token"
+      additionalProperties: true
+    RefreshTokenResponseMobile:
+      type: object
+      description: "Token response for mobile clients. Additional fields can be included in the response"
+      properties:
+        access_token:
+          type: string
+          description: "Access token"
+        refresh_token:
+          type: string
+          description: "Refresh token"
+      additionalProperties: true
+    UpdateOwnProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Name (optional) must be a string between 1 and 255 characters"
+          x-oapi-codegen-extra-tags:
+            validate: "min=1,max=255"
+        email:
+          type: string
+          description: "Email (optional) must be a valid email address"
+          x-oapi-codegen-extra-tags:
+            validate: "email,min=5,max=255"
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "User ID"
+        name:
+          type: string
+          description: "User name"
+        email:
+          type: string
+          description: "User email"
+    FriendResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "ID of the friend"
+        name:
+          type: string
+          description: "Display name of the friend"
+        friends_since:
+          type: string
+          format: date-time
+          description: "When the friendship was established"
+    FriendsResponse:
+      type: object
+      properties:
+        friends:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendResponse"
+        next_page_token:
+          type: string
+          description: "Token for retrieving the next page"
+    FriendInvite:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the invite"
+        from_user_id:
+          type: string
+          description: "ID of the user who sent the invite"
+        to_user_id:
+          type: string
+          description: "ID of the user who received the invite"
+        message:
+          type: string
+          description: "Optional message included with the invite"
+        status:
+          type: string
+          enum: [pending, accepted, declined]
+          description: "Current status of the invite"
+        created_at:
+          type: string
+          format: date-time
+          description: "When the invite was created"
+        updated_at:
+          type: string
+          format: date-time
+          description: "When the invite was last updated"
+    InvitesResponse:
+      type: object
+      properties:
+        invites:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendInvite"
+        next_page_token:
+          type: string
+          description: "Token for retrieving the next page"
+    Chat:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the chat"
+        user_id:
+          type: string
+          description: "ID of the user"
+        friend_id:
+          type: string
+          description: "ID of the friend"
+        created_at:
+          type: string
+          format: date-time
+          description: "When the chat was created"
+    ChatsResponse:
+      type: object
+      properties:
+        chats:
+          type: array
+          items:
+            $ref: "#/components/schemas/Chat"
+        next_page_token:
+          type: string
+          description: "Token for retrieving the next page"
+    MessageRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: "Message content"
+          x-oapi-codegen-extra-tags:
+            validate: "min=1,max=1000"
+      required:
+        - content
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the message"
+        sender_id:
+          type: string
+          description: "ID of the sender"
+        content:
+          type: string
+          description: "Content of the message"
+        created_at:
+          type: string
+          format: date-time
+          description: "When the message was created"
+    MessagesResponse:
+      type: object
+      properties:
+        chat:
+          $ref: "#/components/schemas/Chat"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageResponse"
+        next_page_token:
+          type: string
+          description: "Token for retrieving the next page"
+    InviteFriendRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "Optional message to send with friend request acceptance"
+          x-oapi-codegen-extra-tags:
+            validate: "min=1,max=300"
+    InviteFriendResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "ID of the created friend invite"
+  parameters:
+    clientType:
+      name: X-Client-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: [web, mobile]
+      description: "Client type for token delivery method"
+    pageToken:
+      name: page_token
+      in: query
+      required: false
+      schema:
+        type: string
+      description: "Token for pagination continuation"
+    inviteDirection:
+      name: direction
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [incoming, outgoing]
+      description: "Whether to get incoming or outgoing invites"
+    inviteStatus:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [pending, accepted, declined]
+      description: "Filter invites by status"
+    userId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "User ID"
+    friendId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Friend ID"
+    chatId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Chat ID"
+    searchQuery:
+      name: query
+      in: query
+      required: true
+      schema:
+        type: string
+      description: "Search term to filter users by name or email. Returns empty array if no matches found."
+    inviteId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Friend Invite ID"
+
+tags:
+  - name: "auth"
+    description: "Authentication and Authorization"
+  - name: "chat"
+    description: "One-to-one communication"
+  - name: "subscriber"
+    description: "Friendship management"
+  - name: "user"
+    description: "User profile and personal information"
