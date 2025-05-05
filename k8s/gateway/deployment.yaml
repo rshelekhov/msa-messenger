@@ -21,32 +21,26 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
-          env:
-            - name: AUTH_SERVICE_URL
-              value: "http://auth-service:8081"
-            - name: USER_SERVICE_URL
-              value: "http://user-service:8082"
-            - name: CHAT_SERVICE_URL
-              value: "http://chat-service:8083"
-            - name: SUBSCRIBER_SERVICE_URL
-              value: "http://subscriber-service:8084"
-            - name: NOTIFICATION_SERVICE_URL
-              value: "http://notification-service:8085"
+          envFrom:
+            - configMapRef:
+                name: gateway-config
+            - secretRef:
+                name: gateway-secret
           startupProbe:
             httpGet:
-              path: /health
+              path: /v1/health
               port: 8080
             failureThreshold: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health
+              path: /v1/health
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /v1/ready
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
