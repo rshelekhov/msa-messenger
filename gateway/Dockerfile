@@ -1,7 +1,7 @@
 #######################################
 # Stage 1: Build the application
 #######################################
-FROM golang:1.23.0-alpine3.19 AS build
+FROM golang:1.24.0-alpine AS build
 
 WORKDIR /app
 
