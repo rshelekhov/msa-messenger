@@ -39,8 +39,7 @@ make all
 make status
 
 # Restart individual services after code changes
-make restart-auth      # Rebuild and restart auth service
-make restart-user      # Rebuild and restart user service
+make restart-sso       # Rebuild and restart SSO service
 make restart-chat      # Rebuild and restart chat service
 make restart-gateway   # Rebuild and restart gateway service
 make restart-notification  # Rebuild and restart notification service
@@ -185,12 +184,11 @@ docker images | grep msa-messenger
 
 ```bash
 # Add images to minikube registry
-minikube image load msa-messenger/auth:latest
+# Note: SSO service uses external image rshelekhov/grpc-sso:latest
 minikube image load msa-messenger/chat:latest
 minikube image load msa-messenger/gateway:latest
 minikube image load msa-messenger/notification:latest
 minikube image load msa-messenger/subscriber:latest
-minikube image load msa-messenger/user:latest
 
 # Verify loaded images
 minikube image ls --format table
@@ -209,23 +207,21 @@ Use `make deploy` to deploy all services or deploy services manually:
 
 ```bash
 # Create services (ClusterIP)
-kubectl apply -f k8s/auth/service_cluster_ip.yaml
+kubectl apply -f k8s/sso/service_cluster_ip.yaml
 kubectl apply -f k8s/chat/service_cluster_ip.yaml
 kubectl apply -f k8s/gateway/service_cluster_ip.yaml
 kubectl apply -f k8s/notification/service_cluster_ip.yaml
 kubectl apply -f k8s/subscriber/service_cluster_ip.yaml
-kubectl apply -f k8s/user/service_cluster_ip.yaml
 
 # Verify services
 kubectl get svc
 
 # Create deployments
-kubectl apply -f k8s/auth/deployment.yaml
+kubectl apply -f k8s/sso/deployment.yaml
 kubectl apply -f k8s/chat/deployment.yaml
 kubectl apply -f k8s/gateway/deployment.yaml
 kubectl apply -f k8s/notification/deployment.yaml
 kubectl apply -f k8s/subscriber/deployment.yaml
-kubectl apply -f k8s/user/deployment.yaml
 
 # Verify deployments and pods
 kubectl get deployments
@@ -402,17 +398,12 @@ kubectl get ingress -n messenger
 You can test each service directly using port-forward. Note: Run port-forward and curl commands in separate terminals, as port-forward blocks the terminal while running.
 
 ```bash
-# Auth Service
+# SSO Service (gRPC)
 # Terminal 1:
-kubectl port-forward service/auth-service 8081:8081 -n messenger
+kubectl port-forward service/sso-service 44044:44044 -n messenger
 # Terminal 2:
-curl http://localhost:8081/health
-
-# User Service
-# Terminal 1:
-kubectl port-forward service/user-service 8082:8082 -n messenger
-# Terminal 2:
-curl http://localhost:8082/health
+# Note: SSO service uses gRPC protocol, use grpcurl for testing:
+# grpcurl -plaintext localhost:44044 list
 
 # Chat Service
 # Terminal 1:

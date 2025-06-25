@@ -1,10 +1,8 @@
 go 1.24.2
 
 use (
-	./auth
 	./chat
 	./gateway
 	./notification
 	./subscriber
-	./user
 )
