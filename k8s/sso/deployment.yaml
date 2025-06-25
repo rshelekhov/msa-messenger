@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sso-service
+  namespace: messenger
+  labels:
+    app: sso-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sso-service
+  template:
+    metadata:
+      labels:
+        app: sso-service
+    spec:
+      containers:
+        - name: sso-service
+          image: rshelekhov/grpc-sso:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 44044
+          env:
+            - name: CONFIG_PATH
+              value: "/app/config/.env"
+          volumeMounts:
+            - name: sso-config
+              mountPath: /app/config
+          startupProbe:
+            tcpSocket:
+              port: 44044
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 44044
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 44044
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: sso-config
+          configMap:
+            name: sso-config
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1

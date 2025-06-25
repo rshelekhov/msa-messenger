@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sso-config
+  namespace: messenger
+  labels:
+    app: sso-service
+data:
+  .env: |
+    # App environment
+    APP_ENV=dev
+
+    # GRPC Server
+    GRPC_SERVER_HOST=0.0.0.0
+    GRPC_SERVER_PORT=44044
+    GRPC_SERVER_TIMEOUT=30s
+    GRPC_SERVER_RETRIES_COUNT=3
+
+    # Storage
+    DB_TYPE=postgres
+
+    # PostgreSQL (external service)
+    DB_POSTGRES_CONN_URL=postgres://your_username:your_password@your_postgres_host:5432/sso_db?sslmode=disable
+    DB_POSTGRES_CONN_POOL_SIZE=10
+    DB_POSTGRES_READ_TIMEOUT=5s
+    DB_POSTGRES_WRITE_TIMEOUT=5s
+    DB_POSTGRES_IDLE_TIMEOUT=60s
+    DB_POSTGRES_DIAL_TIMEOUT=10s
+
+    # Redis
+    DB_REDIS_HOST=redis
+    DB_REDIS_PORT=6379
+    DB_REDIS_PASSWORD=
+    DB_REDIS_DB=0
+    DB_REDIS_POOL_SIZE=10
+    DB_REDIS_MIN_IDLE_CONNS=5
+    DB_REDIS_SESSION_TTL=168h
+    DB_REDIS_REVOKED_TOKEN_TTL=24h
+
+    # JWT
+    JWT_ISSUER=sso
+    JWT_SIGNING_METHOD=RS256
+    JWT_JWKS_URL=http://localhost:8081/.well-known/jwks.json
+    JWT_JWKS_TTL=24h
+    JWT_ACCESS_TOKEN_TTL=15m
+    JWT_REFRESH_TOKEN_TTL=720h
+    JWT_REFRESH_TOKEN_COOKIE_DOMAIN=localhost
+    JWT_REFRESH_TOKEN_COOKIE_PATH=/
+
+    # Password hash settings
+    PASSWORD_HASH_TYPE=argon2
+    PASSWORD_HASH_SALT_LENGTH=24
+    PASSWORD_HASH_PEPPER=red-hot-chili-peppers
+
+    # Password hash Argon2 params
+    PASSWORD_HASH_ARGON2_TIME=2
+    PASSWORD_HASH_ARGON2_MEMORY=24576
+    PASSWORD_HASH_ARGON2_PARALLELISM=2
+    PASSWORD_HASH_ARGON2_KEY_LENGTH=24
+
+    # Key storage
+    KEY_STORAGE_TYPE=local
+    KEY_STORAGE_LOCAL_PATH=./certs
+
+    # Email service
+    EMAIL_SERVICE_TYPE=mock
+    EMAIL_TEMPLATES_PATH=./static/email_templates
+
+    # Verification service
+    VERIFICATION_TOKEN_EXPIRY_TIME=24h

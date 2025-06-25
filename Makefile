@@ -7,38 +7,28 @@
 # Set correct Docker context in terminal:
 # docker context use default
 
-.PHONY: start stop clean build docker-build deploy all restart-auth restart-user restart-chat restart-gateway restart-notification restart-subscriber
+.PHONY: start stop clean build docker-build deploy all restart-sso restart-chat restart-gateway restart-notification restart-subscriber
 
 # Build services with Go
 build:
-	go build -o bin/auth ./auth/cmd
 	go build -o bin/chat ./chat/cmd
 	go build -o bin/gateway ./gateway/cmd
 	go build -o bin/notification ./notification/cmd
 	go build -o bin/subscriber ./subscriber/cmd
-	go build -o bin/user ./user/cmd
 
 # Build Docker images
 docker-build:
-	docker build -t msa-messenger/auth:latest -f auth/Dockerfile .
 	docker build -t msa-messenger/chat:latest -f chat/Dockerfile .
 	docker build -t msa-messenger/gateway:latest -f gateway/Dockerfile .
 	docker build -t msa-messenger/notification:latest -f notification/Dockerfile .
 	docker build -t msa-messenger/subscriber:latest -f subscriber/Dockerfile .
-	docker build -t msa-messenger/user:latest -f user/Dockerfile .
 
 # Rebuild and restart individual services
-restart-auth:
-	docker build -t msa-messenger/auth:latest -f auth/Dockerfile .
-	kubectl rollout restart deployment auth-service -n messenger
-	@echo "Waiting for auth service to restart..."
-	kubectl rollout status deployment auth-service -n messenger
-
-restart-user:
-	docker build -t msa-messenger/user:latest -f user/Dockerfile .
-	kubectl rollout restart deployment user-service -n messenger
-	@echo "Waiting for user service to restart..."
-	kubectl rollout status deployment user-service -n messenger
+restart-sso:
+	@echo "Restarting SSO service (using external image)..."
+	kubectl rollout restart deployment sso-service -n messenger
+	@echo "Waiting for SSO service to restart..."
+	kubectl rollout status deployment sso-service -n messenger
 
 restart-chat:
 	docker build -t msa-messenger/chat:latest -f chat/Dockerfile .
@@ -73,18 +63,17 @@ deploy:
 	kubectl create namespace messenger || true
 	kubectl config set-context --current --namespace=messenger
 	kubectl apply -f k8s/namespace.yaml
-	kubectl apply -f k8s/auth/service_cluster_ip.yaml
+	kubectl apply -f k8s/sso/configmap.yaml
+	kubectl apply -f k8s/sso/service_cluster_ip.yaml
 	kubectl apply -f k8s/chat/service_cluster_ip.yaml
 	kubectl apply -f k8s/gateway/service_cluster_ip.yaml
 	kubectl apply -f k8s/notification/service_cluster_ip.yaml
 	kubectl apply -f k8s/subscriber/service_cluster_ip.yaml
-	kubectl apply -f k8s/user/service_cluster_ip.yaml
-	kubectl apply -f k8s/auth/deployment.yaml
+	kubectl apply -f k8s/sso/deployment.yaml
 	kubectl apply -f k8s/chat/deployment.yaml
 	kubectl apply -f k8s/gateway/deployment.yaml
 	kubectl apply -f k8s/notification/deployment.yaml
 	kubectl apply -f k8s/subscriber/deployment.yaml
-	kubectl apply -f k8s/user/deployment.yaml
 	minikube addons enable ingress
 	kubectl apply -f k8s/ingress.yaml
 

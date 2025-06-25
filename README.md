@@ -8,30 +8,17 @@ Microservices-based messenger application.
 
 ### Services
 
-1. **Auth Service** (`cmd/auth`)
+1. **SSO Service** (external: `rshelekhov/grpc-sso`)
 
-   - Handles user authentication and authorization
+   - Unified authentication and user management via gRPC
    - JWT token generation and validation
-   - OAuth integration
-   - DB: MongoDB (user credentials, tokens)
-     - Simple document structure
-     - Built-in TTL for tokens
-     - Efficient indexing for auth lookups
-     - Built-in encryption
+   - User profile management and registration
+   - DB: PostgreSQL
+     - Efficient relational structure
+     - Support for complex transactions
+     - ACID compliance for critical auth operations
 
-2. **User Service** (`cmd/user`)
-
-   - User profile management
-   - User search
-   - Profile updates
-   - Notification preferences
-   - DB: MongoDB (user profiles, avatars, notification settings)
-     - Simple document structure for user profiles
-     - Easy horizontal scaling
-     - Efficient indexing for user lookups
-     - Simple schema for notification preferences
-
-3. **Chat Service** (`cmd/chat`)
+2. **Chat Service** (`cmd/chat`)
 
    - Message handling
    - Real-time communication via gRPC-Web + SSE
@@ -47,7 +34,7 @@ Microservices-based messenger application.
      - Online user presence tracking
      - Message delivery status
 
-4. **Subscriber Service** (`cmd/subscriber`)
+3. **Subscriber Service** (`cmd/subscriber`)
 
    - Friend request management
    - Friend list management (confirmed and pending)
@@ -58,7 +45,7 @@ Microservices-based messenger application.
      - Set operations for efficient friend list management
      - TTL for pending friend requests
 
-5. **Notification Service** (`cmd/notification`)
+4. **Notification Service** (`cmd/notification`)
 
    - Push notifications
    - Email notifications
@@ -73,7 +60,7 @@ Microservices-based messenger application.
      - Automatic cleanup of delivered notifications
      - Pub/sub for real-time delivery
 
-6. **API Gateway** (`cmd/gateway`)
+5. **API Gateway** (`cmd/gateway`)
    - Request routing
    - Rate limiting
    - No DB
@@ -116,7 +103,7 @@ The workspace is already configured, just clone and start coding.
 
 ### Commands
 
-```bash
+```
 # Build all services with go
 make build
 
@@ -139,8 +126,7 @@ make stop
 make clean
 
 # Rebuild and restart individual services
-make restart-auth
-make restart-user
+make restart-sso
 make restart-chat
 make restart-gateway
 make restart-notification
