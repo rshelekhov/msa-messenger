@@ -27,7 +27,7 @@ func New(cfg *config.Config, log *slog.Logger) (*App, error) {
 	}
 
 	jwksProvider := jwtauth.NewRemoteJWKSProvider(cfg.JWT.JWKSEndpoint)
-	jwtManager, err := jwtauth.NewManager(jwksProvider, jwtauth.WithAppID(cfg.AppID))
+	jwtManager, err := jwtauth.NewManager(jwksProvider, jwtauth.WithAppID(cfg.App.ID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to init jwt manager: %w", err)
 	}
