@@ -1,0 +1,57 @@
+# Notification Service Configuration
+
+# App settings
+App:
+  ID: msa-messenger-notification-app-id
+  Env: local
+  ServiceName: msa-messenger-notification
+  ServiceVersion: 1.0.0
+  EnableMetrics: true
+  OTLPEndpoint: localhost:4317
+
+# HTTP Server settings
+HTTPServer:
+  Address: 0.0.0.0:8085
+  Timeout: 30s
+  IdleTimeout: 60s
+
+# Database settings
+Database:
+  Type: mongodb
+  MongoDB:
+    Host: localhost
+    Port: 27017
+    DatabaseName: notification_db
+    Username: ""
+    Password: ""
+    ConnectTimeout: 10s
+    ReadTimeout: 5s
+    WriteTimeout: 5s
+
+# Message Queue
+MessageQueue:
+  Type: rabbitmq
+  RabbitMQ:
+    Host: localhost
+    Port: 5672
+    Username: guest
+    Password: guest
+    VirtualHost: /
+    Exchange: notification_exchange
+    Queue: notification_queue
+
+# Email Service
+EmailService:
+  Type: smtp
+  SMTP:
+    Host: localhost
+    Port: 587
+    Username: ""
+    Password: ""
+    From: noreply@messenger.com
+
+# Push Notifications
+PushNotifications:
+  Enabled: false
+  FCM:
+    ServerKey: ""

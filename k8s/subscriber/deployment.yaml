@@ -21,11 +21,10 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8084
-          env:
-            - name: REDIS_URL
-              value: "redis:6379"
-            - name: RABBITMQ_URL
-              value: "amqp://guest:guest@rabbitmq:5672/"
+          volumeMounts:
+            - name: subscriber-config
+              mountPath: /config
+              readOnly: true
           startupProbe:
             httpGet:
               path: /health
@@ -44,6 +43,10 @@ spec:
               port: 8084
             initialDelaySeconds: 15
             periodSeconds: 10
+      volumes:
+        - name: subscriber-config
+          configMap:
+            name: subscriber-config
   strategy:
     type: RollingUpdate
     rollingUpdate:

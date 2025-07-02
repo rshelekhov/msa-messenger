@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chat-config
+  namespace: messenger
+  labels:
+    app: chat-service
+data:
+  config.yaml: |
+    # Chat Service Configuration for Kubernetes
+
+    App:
+      ID: msa-messenger-chat-app-id
+      Env: production
+      ServiceName: msa-messenger-chat
+      ServiceVersion: 1.0.0
+      EnableMetrics: true
+      OTLPEndpoint: localhost:4317
+
+    HTTPServer:
+      Address: 0.0.0.0:8083
+      Timeout: 30s
+      IdleTimeout: 60s
+
+    Database:
+      Type: mongodb
+      MongoDB:
+        Host: mongodb
+        Port: 27017
+        DatabaseName: chat_db
+        Username: ""
+        Password: ""
+        ConnectTimeout: 10s
+        ReadTimeout: 5s
+        WriteTimeout: 5s
+
+    MessageQueue:
+      Type: rabbitmq
+      RabbitMQ:
+        Host: rabbitmq
+        Port: 5672
+        Username: guest
+        Password: guest
+        VirtualHost: /
+        Exchange: chat_exchange
+        Queue: chat_queue

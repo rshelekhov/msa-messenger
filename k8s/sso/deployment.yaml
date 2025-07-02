@@ -21,12 +21,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 44044
-          env:
-            - name: CONFIG_PATH
-              value: "/app/config/.env"
           volumeMounts:
             - name: sso-config
-              mountPath: /app/config
+              mountPath: /config
+              readOnly: true
           startupProbe:
             tcpSocket:
               port: 44044

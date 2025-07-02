@@ -8,9 +8,15 @@
 # Local configuration files
 .env
 .env.local
+config.yaml
 *.local.yaml
 *.local.yml
 **/secret.yaml
+
+# Allow config examples
+!**/config/*_example.yaml
+!**/config/*_example.yml
+!**/config/*_example.json
 
 # IDE
 .github
