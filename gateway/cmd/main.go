@@ -8,13 +8,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rshelekhov/golib/config"
 	"github.com/rshelekhov/golib/observability"
 	"github.com/rshelekhov/msa-messenger/gateway/internal/app"
-	"github.com/rshelekhov/msa-messenger/gateway/internal/config"
+	appConfig "github.com/rshelekhov/msa-messenger/gateway/internal/config"
 )
 
 func main() {
-	cfg := config.MustLoad()
+	cfg := config.MustLoad[appConfig.Config]()
 
 	obsCfg, err := observability.NewConfig(
 		observability.ConfigParams{

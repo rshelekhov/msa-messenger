@@ -4,29 +4,54 @@ metadata:
   name: gateway-config
   namespace: messenger
 data:
-  # App environment
-  APP_ENV: "local"
+  config.yaml: |
+    # Gateway Configuration for Kubernetes
 
-  # HTTP Server
-  HTTP_SERVER_ADDRESS: "0.0.0.0:8080"
-  HTTP_SERVER_TIMEOUT: "30s"
-  HTTP_SERVER_IDLE_TIMEOUT: "60s"
+    App:
+      ID: msa-messenger-gateway-app-id
+      Env: production
+      ServiceName: msa-messenger-gateway
+      ServiceVersion: 1.0.0
+      EnableMetrics: true
+      OTLPEndpoint: localhost:4317
 
-  # CORS
-  CORS_ALLOWED_ORIGINS: "http://localhost:8080"
-  CORS_ALLOWED_METHODS: "GET, POST, PATCH, DELETE, OPTIONS"
-  CORS_ALLOWED_HEADERS: "Accept, Authorization, Content-Type, X-Request-ID, Origin, X-Requested-With"
-  CORS_EXPOSED_HEADERS: "X-Request-ID"
-  CORS_ALLOW_CREDENTIALS: "false"
-  CORS_MAX_AGE: "3600"
-  CORS_DEBUG: "true"
+    HTTPServer:
+      Address: 0.0.0.0:8080
+      Timeout: 30s
+      IdleTimeout: 60s
 
-  # Validator
-  PASSWORD_REGEX: "^[A-Za-z\\d@$!%*?&]{8,}$"
+    CORS:
+      AllowedOrigins:
+        - http://localhost:8080
+        - http://localhost:3000
+      AllowedMethods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+        - OPTIONS
+      AllowedHeaders:
+        - Accept
+        - Authorization
+        - Content-Type
+        - X-Request-ID
+        - Origin
+        - X-Requested-With
+      ExposedHeaders:
+        - X-Request-ID
+      AllowCredentials: false
+      MaxAge: 3600
+      Debug: false
 
-  # Service URLs
-  AUTH_SERVICE_URL: "http://auth-service:8081"
-  USER_SERVICE_URL: "http://user-service:8082"
-  CHAT_SERVICE_URL: "http://chat-service:8083"
-  SUBSCRIBER_SERVICE_URL: "http://subscriber-service:8084"
-  NOTIFICATION_SERVICE_URL: "http://notification-service:8085"
+    Validator:
+      PasswordRegex: "^[A-Za-z\\d@$!%*?&]{8,}$"
+
+    JWT:
+      JWKSEndpoint: http://sso-service:44044/.well-known/jwks.json
+
+    Services:
+      AuthService: http://sso-service:44044
+      UserService: http://user-service:8082
+      ChatService: http://chat-service:8083
+      SubscriberService: http://subscriber-service:8084
+      NotificationService: http://notification-service:8085
