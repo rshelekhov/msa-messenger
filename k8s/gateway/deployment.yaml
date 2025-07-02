@@ -21,11 +21,10 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
-          envFrom:
-            - configMapRef:
-                name: gateway-config
-            - secretRef:
-                name: gateway-secret
+          volumeMounts:
+            - name: gateway-config
+              mountPath: /config
+              readOnly: true
           startupProbe:
             httpGet:
               path: /v1/health
@@ -44,6 +43,10 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
+      volumes:
+        - name: gateway-config
+          configMap:
+            name: gateway-config
   strategy:
     type: RollingUpdate
     rollingUpdate:

@@ -28,6 +28,9 @@ RUN apk --no-cache add ca-certificates tzdata
 # Copy the chat binary from the build stage
 COPY --from=build /app/chat .
 
+# Copy config files
+COPY --from=build /app/config ./config
+
 # Expose the port that the chat service will run on
 EXPOSE 8083
 

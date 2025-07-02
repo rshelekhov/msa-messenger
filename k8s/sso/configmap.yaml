@@ -6,65 +6,72 @@ metadata:
   labels:
     app: sso-service
 data:
-  .env: |
-    # App environment
-    APP_ENV=dev
+  config.yaml: |
+    # SSO Service Configuration for Kubernetes
 
-    # GRPC Server
-    GRPC_SERVER_HOST=0.0.0.0
-    GRPC_SERVER_PORT=44044
-    GRPC_SERVER_TIMEOUT=30s
-    GRPC_SERVER_RETRIES_COUNT=3
+    App:
+      ID: msa-messenger-sso-app-id
+      Env: production
+      ServiceName: msa-messenger-sso
+      ServiceVersion: 1.0.0
+      EnableMetrics: true
+      OTLPEndpoint: localhost:4317
 
-    # Storage
-    DB_TYPE=postgres
+    GRPCServer:
+      Host: 0.0.0.0
+      Port: 44044
+      Timeout: 30s
+      RetriesCount: 3
 
-    # PostgreSQL (external service)
-    DB_POSTGRES_CONN_URL=postgres://your_username:your_password@your_postgres_host:5432/sso_db?sslmode=disable
-    DB_POSTGRES_CONN_POOL_SIZE=10
-    DB_POSTGRES_READ_TIMEOUT=5s
-    DB_POSTGRES_WRITE_TIMEOUT=5s
-    DB_POSTGRES_IDLE_TIMEOUT=60s
-    DB_POSTGRES_DIAL_TIMEOUT=10s
+    Storage:
+      Type: postgres
 
-    # Redis
-    DB_REDIS_HOST=redis
-    DB_REDIS_PORT=6379
-    DB_REDIS_PASSWORD=
-    DB_REDIS_DB=0
-    DB_REDIS_POOL_SIZE=10
-    DB_REDIS_MIN_IDLE_CONNS=5
-    DB_REDIS_SESSION_TTL=168h
-    DB_REDIS_REVOKED_TOKEN_TTL=24h
+    Database:
+      Postgres:
+        ConnURL: postgres://your_username:your_password@your_postgres_host:5432/sso_db?sslmode=disable
+        ConnPoolSize: 10
+        ReadTimeout: 5s
+        WriteTimeout: 5s
+        IdleTimeout: 60s
+        DialTimeout: 10s
 
-    # JWT
-    JWT_ISSUER=sso
-    JWT_SIGNING_METHOD=RS256
-    JWT_JWKS_URL=http://localhost:8081/.well-known/jwks.json
-    JWT_JWKS_TTL=24h
-    JWT_ACCESS_TOKEN_TTL=15m
-    JWT_REFRESH_TOKEN_TTL=720h
-    JWT_REFRESH_TOKEN_COOKIE_DOMAIN=localhost
-    JWT_REFRESH_TOKEN_COOKIE_PATH=/
+    Redis:
+      Host: redis
+      Port: 6379
+      Password: ""
+      DB: 0
+      PoolSize: 10
+      MinIdleConns: 5
+      SessionTTL: 168h
+      RevokedTokenTTL: 24h
 
-    # Password hash settings
-    PASSWORD_HASH_TYPE=argon2
-    PASSWORD_HASH_SALT_LENGTH=24
-    PASSWORD_HASH_PEPPER=red-hot-chili-peppers
+    JWT:
+      Issuer: sso
+      SigningMethod: RS256
+      JWKSURL: http://sso-service:44044/.well-known/jwks.json
+      JWKSTTL: 24h
+      AccessTokenTTL: 15m
+      RefreshTokenTTL: 720h
+      RefreshTokenCookieDomain: localhost
+      RefreshTokenCookiePath: /
 
-    # Password hash Argon2 params
-    PASSWORD_HASH_ARGON2_TIME=2
-    PASSWORD_HASH_ARGON2_MEMORY=24576
-    PASSWORD_HASH_ARGON2_PARALLELISM=2
-    PASSWORD_HASH_ARGON2_KEY_LENGTH=24
+    PasswordHash:
+      Type: argon2
+      SaltLength: 24
+      Pepper: red-hot-chili-peppers
+      Argon2:
+        Time: 2
+        Memory: 24576
+        Parallelism: 2
+        KeyLength: 24
 
-    # Key storage
-    KEY_STORAGE_TYPE=local
-    KEY_STORAGE_LOCAL_PATH=./certs
+    KeyStorage:
+      Type: local
+      LocalPath: ./certs
 
-    # Email service
-    EMAIL_SERVICE_TYPE=mock
-    EMAIL_TEMPLATES_PATH=./static/email_templates
+    EmailService:
+      Type: mock
+      TemplatesPath: ./static/email_templates
 
-    # Verification service
-    VERIFICATION_TOKEN_EXPIRY_TIME=24h
+    Verification:
+      TokenExpiryTime: 24h

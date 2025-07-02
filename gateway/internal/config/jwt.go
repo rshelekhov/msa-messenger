@@ -1,5 +1,5 @@
 package config
 
 type JWT struct {
-	JWKSEndpoint string `mapstructure:"JWKS_ENDPOINT"`
+	JWKSEndpoint string `yaml:"JWKSEndpoint"`
 }

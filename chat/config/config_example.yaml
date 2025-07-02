@@ -1,0 +1,41 @@
+# Chat Service Configuration
+
+# App settings
+App:
+  ID: msa-messenger-chat-app-id
+  Env: local
+  ServiceName: msa-messenger-chat
+  ServiceVersion: 1.0.0
+  EnableMetrics: true
+  OTLPEndpoint: localhost:4317
+
+# HTTP Server settings
+HTTPServer:
+  Address: 0.0.0.0:8083
+  Timeout: 30s
+  IdleTimeout: 60s
+
+# Database settings
+Database:
+  Type: mongodb
+  MongoDB:
+    Host: localhost
+    Port: 27017
+    DatabaseName: chat_db
+    Username: ""
+    Password: ""
+    ConnectTimeout: 10s
+    ReadTimeout: 5s
+    WriteTimeout: 5s
+
+# Message Queue
+MessageQueue:
+  Type: rabbitmq
+  RabbitMQ:
+    Host: localhost
+    Port: 5672
+    Username: guest
+    Password: guest
+    VirtualHost: /
+    Exchange: chat_exchange
+    Queue: chat_queue

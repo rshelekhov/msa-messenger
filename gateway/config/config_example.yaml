@@ -1,0 +1,48 @@
+# Gateway Configuration in YAML format
+# This file will be automatically found by config loader
+
+# App settings
+App:
+  ID: msa-messenger-gateway-app-id
+  Env: local
+  ServiceName: msa-messenger-gateway
+  ServiceVersion: 1.0.0
+  EnableMetrics: true
+  OTLPEndpoint: localhost:4317
+
+# HTTP Server settings
+HTTPServer:
+  Address: 0.0.0.0:8080
+  Timeout: 30s
+  IdleTimeout: 60s
+
+# CORS settings
+CORS:
+  AllowedOrigins:
+    - http://localhost:8080
+  AllowedMethods:
+    - GET
+    - POST
+    - PATCH
+    - DELETE
+    - OPTIONS
+  AllowedHeaders:
+    - Accept
+    - Authorization
+    - Content-Type
+    - X-Request-ID
+    - Origin
+    - X-Requested-With
+  ExposedHeaders:
+    - X-Request-ID
+  AllowCredentials: false
+  MaxAge: 3600
+  Debug: true
+
+# Validator settings
+Validator:
+  PasswordRegex: "^[A-Za-z\\d@$!%*?&]{8,}$"
+
+# JWT settings
+JWT:
+  JWKSEndpoint: http://localhost:8080/v1/.well-known/jwks.json
