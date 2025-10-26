@@ -4,9 +4,11 @@ import "time"
 
 type (
 	User struct {
-		ID    string
-		Name  string
-		Email string
+		ID              string
+		Name            string
+		Email           string
+		CurrentPassword string
+		UpdatedPassword string
 	}
 
 	UserCredentials struct {
