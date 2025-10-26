@@ -10,19 +10,19 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Chat struct {
+type ChatClient struct {
 	log        *slog.Logger
 	GRPCClient chatv1.ChatServiceClient
 }
 
-func NewChatClient(log *slog.Logger, conn *grpc.ClientConn) *Chat {
-	return &Chat{
+func NewChatClient(log *slog.Logger, conn *grpc.ClientConn) *ChatClient {
+	return &ChatClient{
 		log:        log,
 		GRPCClient: chatv1.NewChatServiceClient(conn),
 	}
 }
 
-func (c *Chat) CreateChat(ctx context.Context, friendID string) (chatID string, err error) {
+func (c *ChatClient) CreateChat(ctx context.Context, friendID string) (chatID string, err error) {
 	const op = "grpc.client.chat.CreateChat"
 
 	req := &chatv1.CreateChatRequest{
@@ -46,7 +46,7 @@ func (c *Chat) CreateChat(ctx context.Context, friendID string) (chatID string, 
 	return chatID, nil
 }
 
-func (c *Chat) GetChat(ctx context.Context, chatID string, pageToken *string) (chat entity.Chat, nextPageToken string, err error) {
+func (c *ChatClient) GetChat(ctx context.Context, chatID string, pageToken *string) (chat entity.Chat, nextPageToken string, err error) {
 	const op = "grpc.client.chat.GetChat"
 
 	req := &chatv1.GetChatRequest{
@@ -98,7 +98,7 @@ func mapMessages(protoMessages []*chatv1.Message) []entity.Message {
 	return messages
 }
 
-func (c *Chat) DeleteChat(ctx context.Context, chatID string) (err error) {
+func (c *ChatClient) DeleteChat(ctx context.Context, chatID string) (err error) {
 	req := &chatv1.DeleteChatRequest{
 		ChatId: chatID,
 	}
@@ -111,7 +111,7 @@ func (c *Chat) DeleteChat(ctx context.Context, chatID string) (err error) {
 	return nil
 }
 
-func (c *Chat) ListChats(ctx context.Context, pageToken *string) (chats []entity.Chat, nextPageToken string, err error) {
+func (c *ChatClient) ListChats(ctx context.Context, pageToken *string) (chats []entity.Chat, nextPageToken string, err error) {
 	req := &chatv1.ListChatsRequest{}
 	if pageToken != nil {
 		req.PageToken = *pageToken
@@ -137,7 +137,7 @@ func (c *Chat) ListChats(ctx context.Context, pageToken *string) (chats []entity
 	return chats, resp.GetNextPageToken(), nil
 }
 
-func (c *Chat) SendMessage(ctx context.Context, chatID string, content string) (message entity.Message, err error) {
+func (c *ChatClient) SendMessage(ctx context.Context, chatID string, content string) (message entity.Message, err error) {
 	const op = "grpc.client.chat.SendMessage"
 
 	req := &chatv1.SendMessageRequest{
@@ -169,7 +169,7 @@ func (c *Chat) SendMessage(ctx context.Context, chatID string, content string) (
 	return message, nil
 }
 
-func (c *Chat) mapChatError(err error) error {
+func (c *ChatClient) mapChatError(err error) error {
 	// TODO: implement this
 	return nil
 }

@@ -10,19 +10,19 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Subscriber struct {
+type SubscriberClient struct {
 	log        *slog.Logger
 	GRPCClient subscriberv1.SubscriberServiceClient
 }
 
-func NewSubscriberClient(log *slog.Logger, conn *grpc.ClientConn) *Subscriber {
-	return &Subscriber{
+func NewSubscriberClient(log *slog.Logger, conn *grpc.ClientConn) *SubscriberClient {
+	return &SubscriberClient{
 		log:        log,
 		GRPCClient: subscriberv1.NewSubscriberServiceClient(conn),
 	}
 }
 
-func (s *Subscriber) GetFriends(ctx context.Context, pageToken string) (friends []entity.Friend, nextPageToken string, err error) {
+func (s *SubscriberClient) GetFriends(ctx context.Context, pageToken string) (friends []entity.Friend, nextPageToken string, err error) {
 	req := &subscriberv1.GetFriendsRequest{
 		PageToken: pageToken,
 	}
@@ -50,7 +50,7 @@ func (s *Subscriber) GetFriends(ctx context.Context, pageToken string) (friends 
 	return friends, nextPageToken, nil
 }
 
-func (s *Subscriber) GetFriend(ctx context.Context, friendID string) (friend entity.Friend, err error) {
+func (s *SubscriberClient) GetFriend(ctx context.Context, friendID string) (friend entity.Friend, err error) {
 	const op = "grpc.client.subscriber.GetFriend"
 
 	req := &subscriberv1.GetFriendProfileRequest{
@@ -78,7 +78,7 @@ func (s *Subscriber) GetFriend(ctx context.Context, friendID string) (friend ent
 	}, nil
 }
 
-func (s *Subscriber) RemoveFriend(ctx context.Context, friendID string) (err error) {
+func (s *SubscriberClient) RemoveFriend(ctx context.Context, friendID string) (err error) {
 	req := &subscriberv1.DeleteFriendRequest{
 		FriendId: friendID,
 	}
@@ -91,7 +91,7 @@ func (s *Subscriber) RemoveFriend(ctx context.Context, friendID string) (err err
 	return nil
 }
 
-func (s *Subscriber) InviteFriend(ctx context.Context, invitation entity.FriendInvite) (inviteID string, err error) {
+func (s *SubscriberClient) InviteFriend(ctx context.Context, invitation entity.FriendInvite) (inviteID string, err error) {
 	const op = "grpc.client.subscriber.InviteFriend"
 
 	req := &subscriberv1.SendFriendInviteRequest{
@@ -116,7 +116,7 @@ func (s *Subscriber) InviteFriend(ctx context.Context, invitation entity.FriendI
 	return inviteID, nil
 }
 
-func (s *Subscriber) GetFriendInvites(ctx context.Context, direction, status, pageToken *string) (invites []entity.FriendInvite, nextPageToken string, err error) {
+func (s *SubscriberClient) GetFriendInvites(ctx context.Context, direction, status, pageToken *string) (invites []entity.FriendInvite, nextPageToken string, err error) {
 	req := &subscriberv1.GetAllFriendInvitesRequest{}
 
 	if direction != nil {
@@ -163,7 +163,7 @@ func (s *Subscriber) GetFriendInvites(ctx context.Context, direction, status, pa
 	return invites, nextPageToken, nil
 }
 
-func (s *Subscriber) AcceptFriendInvite(ctx context.Context, inviteID string) (err error) {
+func (s *SubscriberClient) AcceptFriendInvite(ctx context.Context, inviteID string) (err error) {
 	req := &subscriberv1.AcceptFriendInviteRequest{
 		InviteId: inviteID,
 	}
@@ -176,7 +176,7 @@ func (s *Subscriber) AcceptFriendInvite(ctx context.Context, inviteID string) (e
 	return nil
 }
 
-func (s *Subscriber) DeclineFriendInvite(ctx context.Context, inviteID string) (err error) {
+func (s *SubscriberClient) DeclineFriendInvite(ctx context.Context, inviteID string) (err error) {
 	req := &subscriberv1.DeclineFriendInviteRequest{
 		InviteId: inviteID,
 	}
@@ -189,7 +189,7 @@ func (s *Subscriber) DeclineFriendInvite(ctx context.Context, inviteID string) (
 	return nil
 }
 
-func (s *Subscriber) mapSubscriberError(err error) error {
+func (s *SubscriberClient) mapSubscriberError(err error) error {
 	// TODO: implement this
 	return nil
 }

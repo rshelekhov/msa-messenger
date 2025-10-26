@@ -14,15 +14,15 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type Auth struct {
+type AuthClient struct {
 	log                *slog.Logger
 	GRPCClient         authv1.AuthServiceClient
 	VerificationURL    string
 	ConfirmPasswordURL string
 }
 
-func NewAuthClient(log *slog.Logger, conn *grpc.ClientConn, ssoService config.SSOService) *Auth {
-	return &Auth{
+func NewAuthClient(log *slog.Logger, conn *grpc.ClientConn, ssoService config.SSOService) *AuthClient {
+	return &AuthClient{
 		log:                log,
 		GRPCClient:         authv1.NewAuthServiceClient(conn),
 		VerificationURL:    ssoService.VerificationURL,
@@ -30,7 +30,7 @@ func NewAuthClient(log *slog.Logger, conn *grpc.ClientConn, ssoService config.SS
 	}
 }
 
-func (a *Auth) RegisterUser(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error) {
+func (a *AuthClient) RegisterUser(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error) {
 	const op = "grpc.client.auth.RegisterUser"
 
 	req := &authv1.RegisterUserRequest{
@@ -79,7 +79,7 @@ func (a *Auth) RegisterUser(ctx context.Context, user entity.UserCredentials, de
 	}, nil
 }
 
-func (a *Auth) Login(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error) {
+func (a *AuthClient) Login(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error) {
 	const op = "grpc.client.auth.Login"
 
 	req := &authv1.LoginRequest{
@@ -125,7 +125,7 @@ func (a *Auth) Login(ctx context.Context, user entity.UserCredentials, device en
 	}, nil
 }
 
-func (a *Auth) Logout(ctx context.Context, device entity.UserDevice) (err error) {
+func (a *AuthClient) Logout(ctx context.Context, device entity.UserDevice) (err error) {
 	req := &authv1.LogoutRequest{
 		UserDeviceData: &authv1.UserDeviceData{
 			UserAgent: device.UserAgent,
@@ -140,7 +140,7 @@ func (a *Auth) Logout(ctx context.Context, device entity.UserDevice) (err error)
 
 	return nil
 }
-func (a *Auth) RefreshToken(ctx context.Context, refreshToken string, device entity.UserDevice) (tokens entity.UserTokens, err error) {
+func (a *AuthClient) RefreshToken(ctx context.Context, refreshToken string, device entity.UserDevice) (tokens entity.UserTokens, err error) {
 	req := &authv1.RefreshTokensRequest{
 		RefreshToken: refreshToken,
 		UserDeviceData: &authv1.UserDeviceData{
@@ -165,7 +165,7 @@ func (a *Auth) RefreshToken(ctx context.Context, refreshToken string, device ent
 	}, nil
 }
 
-func (a *Auth) GetJWKS(ctx context.Context) (jwks entity.JWKS, err error) {
+func (a *AuthClient) GetJWKS(ctx context.Context) (jwks entity.JWKS, err error) {
 	req := &authv1.GetJWKSRequest{}
 
 	resp, err := a.GRPCClient.GetJWKS(ctx, req)
@@ -190,7 +190,7 @@ func (a *Auth) GetJWKS(ctx context.Context) (jwks entity.JWKS, err error) {
 	}, nil
 }
 
-func (a *Auth) VerifyEmail(ctx context.Context, verificationToken string) (err error) {
+func (a *AuthClient) VerifyEmail(ctx context.Context, verificationToken string) (err error) {
 	req := &authv1.VerifyEmailRequest{
 		Token: verificationToken,
 	}
@@ -203,7 +203,7 @@ func (a *Auth) VerifyEmail(ctx context.Context, verificationToken string) (err e
 	return nil
 }
 
-func (a *Auth) ResetPassword(ctx context.Context, email string) (err error) {
+func (a *AuthClient) ResetPassword(ctx context.Context, email string) (err error) {
 	req := &authv1.ResetPasswordRequest{
 		ConfirmUrl: a.ConfirmPasswordURL,
 		Email:      email,
@@ -217,7 +217,7 @@ func (a *Auth) ResetPassword(ctx context.Context, email string) (err error) {
 	return nil
 }
 
-func (a *Auth) ChangePassword(ctx context.Context, passwordResetToken string, updatedPassword string) (err error) {
+func (a *AuthClient) ChangePassword(ctx context.Context, passwordResetToken string, updatedPassword string) (err error) {
 	req := &authv1.ChangePasswordRequest{
 		Token:           passwordResetToken,
 		UpdatedPassword: updatedPassword,
@@ -231,7 +231,7 @@ func (a *Auth) ChangePassword(ctx context.Context, passwordResetToken string, up
 	return nil
 }
 
-func (a *Auth) mapSSOError(err error) error {
+func (a *AuthClient) mapSSOError(err error) error {
 	extracted, extractErr := grpcerrors.ExtractError(err)
 	if extractErr != nil {
 		a.log.Error("failed to extract error",
@@ -272,6 +272,9 @@ func (a *Auth) mapSSOError(err error) error {
 
 		case commonv1.ErrorCode_ERROR_CODE_FAILED_TO_SEND_VERIFICATION_EMAIL:
 			return domain.ErrFailedToSendVerificationEmail
+
+		case commonv1.ErrorCode_ERROR_CODE_FAILED_TO_SEND_RESET_PASSWORD_EMAIL:
+			return domain.ErrFailedToSendResetPasswordEmail
 
 		case commonv1.ErrorCode_ERROR_CODE_USER_DEVICE_NOT_FOUND:
 			return domain.ErrUserDeviceNotRegisteredOrAlreadyLoggedOut
