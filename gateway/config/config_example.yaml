@@ -46,3 +46,14 @@ Validator:
 # JWT settings
 JWT:
   JWKSEndpoint: http://localhost:8080/v1/.well-known/jwks.json
+
+# gRPC Services settings
+GRPCServices:
+  SSOService:
+    Address: localhost:44044
+    VerificationURL: https://localhost:8080/v1/auth/verify-email
+    ConfirmPasswordURL: https://localhost:8080/v1/auth/confirm-password
+  ChatService:
+    Address: localhost:8083
+  SubscriberService:
+    Address: localhost:8084
