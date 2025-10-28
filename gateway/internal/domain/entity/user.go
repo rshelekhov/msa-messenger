@@ -28,7 +28,7 @@ type (
 		Domain           string
 		Path             string
 		ExpiresAt        time.Time
-		HttpOnly         bool
+		HTTPOnly         bool
 		AdditionalFields map[string]string
 	}
 )

@@ -124,6 +124,7 @@ func (c *ChatClient) ListChats(ctx context.Context, pageToken *string) (chats []
 
 	chatsData := resp.GetChats()
 	chats = make([]entity.Chat, len(chatsData))
+
 	for i, chatData := range chatsData {
 		chats[i] = entity.Chat{
 			ID:        chatData.GetId(),

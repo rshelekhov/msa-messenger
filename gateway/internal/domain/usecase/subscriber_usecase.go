@@ -45,7 +45,16 @@ func (u *SubscriberUsecase) InviteFriend(ctx context.Context, invitation entity.
 	return u.subscriberClient.InviteFriend(ctx, invitation)
 }
 
-func (u *SubscriberUsecase) GetFriendInvites(ctx context.Context, direction, status, pageToken *string) (invites []entity.FriendInvite, nextPageToken string, err error) {
+func (u *SubscriberUsecase) GetFriendInvites(
+	ctx context.Context,
+	direction *string,
+	status *string,
+	pageToken *string,
+) (
+	invites []entity.FriendInvite,
+	nextPageToken string,
+	err error,
+) {
 	return u.subscriberClient.GetFriendInvites(ctx, direction, status, pageToken)
 }
 

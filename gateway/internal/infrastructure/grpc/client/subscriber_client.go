@@ -116,7 +116,16 @@ func (s *SubscriberClient) InviteFriend(ctx context.Context, invitation entity.F
 	return inviteID, nil
 }
 
-func (s *SubscriberClient) GetFriendInvites(ctx context.Context, direction, status, pageToken *string) (invites []entity.FriendInvite, nextPageToken string, err error) {
+func (s *SubscriberClient) GetFriendInvites(
+	ctx context.Context,
+	direction *string,
+	status *string,
+	pageToken *string,
+) (
+	invites []entity.FriendInvite,
+	nextPageToken string,
+	err error,
+) {
 	req := &subscriberv1.GetAllFriendInvitesRequest{}
 
 	if direction != nil {
