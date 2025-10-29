@@ -144,12 +144,8 @@ github.com/rshelekhov/jwtauth v0.1.17 h1:STEqQg3/R4x/RTfrTZYNRVUYFXyyxnbSQ40FYCs
 github.com/rshelekhov/jwtauth v0.1.17/go.mod h1:juQqrzOFeaEgL2+ieSep4ysq9Zc8xZ7vx129nWH0fiI=
 github.com/rshelekhov/msa-messenger-protos v0.0.8 h1:dAinc5bxN5/YV3srinuN1tBEmAFtNtw31i5NoyIMmJo=
 github.com/rshelekhov/msa-messenger-protos v0.0.8/go.mod h1:XVUxvLWHe1cKnqShcuBHHukhv2yRk2YqPVn5K+eJJ1c=
-github.com/rshelekhov/sso v0.0.0-20251020182552-ccbf922f4506 h1:16DBSQ48h+Ti88vrwpf7nvGwNgLGCU7xxikC8FCU220=
-github.com/rshelekhov/sso v0.0.0-20251020182552-ccbf922f4506/go.mod h1:qu2frFYywGocXqNROQqcAsm+IB1rty1XXRIrWZ1lZ8w=
 github.com/rshelekhov/sso v0.1.0 h1:rDFBfQijioYWKv+GtRgoedajtEMCVJxW+FCYuA4MHxc=
 github.com/rshelekhov/sso v0.1.0/go.mod h1:jnw8cLGWXbudUnGajEnTgQgVb2Senu0x3nY/C4BdeeM=
-github.com/rshelekhov/sso-protos v0.3.5 h1:7i2+8VL8FofipHz+Nf/3m3Bn0SY339pCU5Axi+NjWiE=
-github.com/rshelekhov/sso-protos v0.3.5/go.mod h1:+1CtdHjjBbGQOuMRoL/SFZErCHcuBe8dwfFIsu5n/2A=
 github.com/rshelekhov/sso-protos v0.3.6 h1:qGgFFHSrNWf2iMD8NJGVjW1DyVjDVRRa1renlncYe9g=
 github.com/rshelekhov/sso-protos v0.3.6/go.mod h1:+1CtdHjjBbGQOuMRoL/SFZErCHcuBe8dwfFIsu5n/2A=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
