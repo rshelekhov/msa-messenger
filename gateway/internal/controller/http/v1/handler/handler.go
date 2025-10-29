@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -30,10 +29,13 @@ type (
 
 	AuthUsecase interface {
 		Register(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error)
-		Login(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (tokens entity.UserTokens, err error)
+		Login(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error)
 		Logout(ctx context.Context, device entity.UserDevice) (err error)
 		RefreshToken(ctx context.Context, refreshToken string, device entity.UserDevice) (tokens entity.UserTokens, err error)
 		GetJWKS(ctx context.Context) (jwks entity.JWKS, err error)
+		VerifyEmail(ctx context.Context, verificationToken string) (err error)
+		ResetPassword(ctx context.Context, email string) (err error)
+		ChangePassword(ctx context.Context, passwordResetToken string, updatedPassword string) (err error)
 	}
 
 	UserUsecase interface {
@@ -92,8 +94,10 @@ func (h *Handler) logWithReqID(ctx context.Context, op string) *slog.Logger {
 
 func (h *Handler) decodeAndValidateRequest(w http.ResponseWriter, r *http.Request, log *slog.Logger, request any) error {
 	if err := render.Decode(r, request); err != nil {
-		err = fmt.Errorf("failed to decode request: %w", err)
-		handleBadRequestError(w, r, log, err)
+		log.Warn("failed to decode request",
+			slog.String("error", err.Error()),
+		)
+		handleBadRequestError(w, r, ErrInvalidRequest)
 		return err
 	}
 

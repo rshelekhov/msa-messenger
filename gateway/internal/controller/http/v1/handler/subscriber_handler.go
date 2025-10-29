@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -19,14 +19,15 @@ func (h *Handler) GetFriends() http.HandlerFunc {
 
 		params := &GetFriendsParams{}
 		if err := render.Decode(r, params); err != nil {
-			err = fmt.Errorf("failed to decode request: %w", err)
-			handleBadRequestError(w, r, log, err)
+			log.Warn("failed to decode request", slog.String("error", err.Error()))
+			handleBadRequestError(w, r, ErrInvalidRequest)
 			return
 		}
 
 		friends, nextPageToken, err := h.subscriberUsecase.GetFriends(ctx, params.PageToken)
 		if err != nil {
-			handleInternalError(w, r, log, err)
+			log.Error("failed to get friends", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -46,17 +47,21 @@ func (h *Handler) GetFriend() http.HandlerFunc {
 
 		friendID := chi.URLParam(r, "id")
 		if friendID == "" {
-			handleBadRequestError(w, r, log, errors.New("friend ID is required"))
+			log.Warn("friend ID is required")
+			handleBadRequestError(w, r, ErrFriendIDRequired)
 			return
 		}
 
 		friend, err := h.subscriberUsecase.GetFriend(ctx, friendID)
 		if err != nil {
 			if errors.Is(err, domain.ErrFriendNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to get friend", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrFriendNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to get friend", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -76,17 +81,21 @@ func (h *Handler) RemoveFriend() http.HandlerFunc {
 
 		friendID := chi.URLParam(r, "id")
 		if friendID == "" {
-			handleBadRequestError(w, r, log, errors.New("friend ID is required"))
+			log.Warn("friend ID is required")
+			handleBadRequestError(w, r, ErrFriendIDRequired)
 			return
 		}
 
 		err := h.subscriberUsecase.RemoveFriend(ctx, friendID)
 		if err != nil {
 			if errors.Is(err, domain.ErrFriendNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to remove friend", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrFriendNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to remove friend", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -103,7 +112,8 @@ func (h *Handler) InviteFriend() http.HandlerFunc {
 
 		friendID := chi.URLParam(r, "id")
 		if friendID == "" {
-			handleBadRequestError(w, r, log, errors.New("friend ID is required"))
+			log.Warn("friend ID is required")
+			handleBadRequestError(w, r, ErrFriendIDRequired)
 			return
 		}
 
@@ -116,7 +126,8 @@ func (h *Handler) InviteFriend() http.HandlerFunc {
 
 		invitationID, err := h.subscriberUsecase.InviteFriend(ctx, invitation)
 		if err != nil {
-			handleInternalError(w, r, log, err)
+			log.Error("failed to invite friend", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -135,8 +146,8 @@ func (h *Handler) GetFriendInvites() http.HandlerFunc {
 
 		params := &GetFriendInvitesParams{}
 		if err := render.Decode(r, params); err != nil {
-			err = fmt.Errorf("failed to decode request: %w", err)
-			handleBadRequestError(w, r, log, err)
+			log.Warn("failed to decode request", slog.String("error", err.Error()))
+			handleBadRequestError(w, r, ErrInvalidRequest)
 			return
 		}
 
@@ -157,7 +168,8 @@ func (h *Handler) GetFriendInvites() http.HandlerFunc {
 			params.PageToken,
 		)
 		if err != nil {
-			handleInternalError(w, r, log, err)
+			log.Error("failed to get friend invites", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -177,16 +189,20 @@ func (h *Handler) AcceptFriendInvite() http.HandlerFunc {
 
 		inviteID := chi.URLParam(r, "id")
 		if inviteID == "" {
-			handleBadRequestError(w, r, log, errors.New("invite ID is required"))
+			log.Warn("invite ID is required")
+			handleBadRequestError(w, r, ErrInviteIDRequired)
 			return
 		}
 
 		if err := h.subscriberUsecase.AcceptFriendInvite(ctx, inviteID); err != nil {
 			if errors.Is(err, domain.ErrFriendInviteNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to accept friend invite", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrFriendInviteNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to accept friend invite", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -203,16 +219,20 @@ func (h *Handler) DeclineFriendInvite() http.HandlerFunc {
 
 		inviteID := chi.URLParam(r, "id")
 		if inviteID == "" {
-			handleBadRequestError(w, r, log, errors.New("invite ID is required"))
+			log.Warn("invite ID is required")
+			handleBadRequestError(w, r, ErrInviteIDRequired)
 			return
 		}
 
 		if err := h.subscriberUsecase.DeclineFriendInvite(ctx, inviteID); err != nil {
 			if errors.Is(err, domain.ErrFriendInviteNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to decline friend invite", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrFriendInviteNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to decline friend invite", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 

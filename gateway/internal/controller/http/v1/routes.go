@@ -17,6 +17,9 @@ func (ar *appRouter) initRoutes() (*chi.Mux, error) {
 				r.Post("/login", ar.h.Login())
 				r.Post("/register", ar.h.Register())
 				r.Post("/refresh", ar.h.RefreshToken())
+				r.Get("/verify-email", ar.h.VerifyEmail())
+				r.Post("/reset-password", ar.h.ResetPassword())
+				r.Post("/change-password", ar.h.ChangePassword())
 			})
 		})
 

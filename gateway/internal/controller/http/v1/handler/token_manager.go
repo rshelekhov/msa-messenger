@@ -45,7 +45,7 @@ func (s *tokenSender) setRefreshTokenCookie(w http.ResponseWriter, tokens entity
 		Domain:   tokens.Domain,
 		Path:     tokens.Path,
 		Expires:  tokens.ExpiresAt,
-		HttpOnly: tokens.HttpOnly,
+		HttpOnly: tokens.HTTPOnly,
 	})
 }
 
