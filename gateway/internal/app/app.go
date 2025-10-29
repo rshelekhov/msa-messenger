@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/rshelekhov/jwtauth"
 	"github.com/rshelekhov/msa-messenger/gateway/internal/app/http"
 	"github.com/rshelekhov/msa-messenger/gateway/internal/config"
 	v1 "github.com/rshelekhov/msa-messenger/gateway/internal/controller/http/v1"
 	"github.com/rshelekhov/msa-messenger/gateway/internal/controller/http/v1/handler"
-	"github.com/rshelekhov/msa-messenger/gateway/internal/domain/usecase/auth"
-	"github.com/rshelekhov/msa-messenger/gateway/internal/domain/usecase/chat"
-	"github.com/rshelekhov/msa-messenger/gateway/internal/domain/usecase/subscriber"
-	"github.com/rshelekhov/msa-messenger/gateway/internal/domain/usecase/user"
+	"github.com/rshelekhov/msa-messenger/gateway/internal/domain/usecase"
+	"github.com/rshelekhov/msa-messenger/gateway/internal/infrastructure/grpc/client"
+	"github.com/rshelekhov/msa-messenger/gateway/internal/infrastructure/grpc/connection"
 	"github.com/rshelekhov/msa-messenger/gateway/internal/lib/validator"
+	"github.com/rshelekhov/sso/pkg/jwtauth"
 )
 
 type App struct {
@@ -26,16 +25,35 @@ func New(cfg *config.Config, log *slog.Logger) (*App, error) {
 		return nil, fmt.Errorf("failed to init validator: %w", err)
 	}
 
-	jwksProvider := jwtauth.NewRemoteJWKSProvider(cfg.JWT.JWKSEndpoint)
-	jwtManager, err := jwtauth.NewManager(jwksProvider, jwtauth.WithAppID(cfg.App.ID))
+	jwksProvider, err := jwtauth.NewRemoteJWKSProvider(cfg.JWT.JWKSEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init jwt manager: %w", err)
+		return nil, fmt.Errorf("failed to init jwks provider: %w", err)
 	}
 
-	authUsecase := auth.NewUsecase(log)
-	userUsecase := user.NewUsecase(log)
-	subscriberUsecase := subscriber.NewUsecase(log)
-	chatUsecase := chat.NewUsecase(log)
+	jwtManager := jwtauth.NewManager(jwksProvider)
+
+	grpcConnections, err := connection.NewGRPCConnections(
+		connection.Addresses{
+			SSO:        cfg.GRPCServices.SSOService.Address,
+			Chat:       cfg.GRPCServices.ChatService.Address,
+			Subscriber: cfg.GRPCServices.SubscriberService.Address,
+		},
+		cfg.App.ID,
+		jwtManager.AuthUnaryClientInterceptor(cfg.App.ID),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init grpc connections: %w", err)
+	}
+
+	authClient := client.NewAuthClient(log, grpcConnections.SSOConn, cfg.GRPCServices.SSOService)
+	userClient := client.NewUserClient(log, grpcConnections.SSOConn)
+	subscriberClient := client.NewSubscriberClient(log, grpcConnections.SubscriberConn)
+	chatClient := client.NewChatClient(log, grpcConnections.ChatConn)
+
+	authUsecase := usecase.NewAuthUsecase(authClient)
+	userUsecase := usecase.NewUserUsecase(userClient)
+	subscriberUsecase := usecase.NewSubscriberUsecase(subscriberClient)
+	chatUsecase := usecase.NewChatUsecase(chatClient)
 
 	handler := handler.New(log, validate, jwtManager, authUsecase, userUsecase, subscriberUsecase, chatUsecase)
 
