@@ -23,12 +23,12 @@ var (
 	ErrNoUsersFound                              = errors.New("no users found")
 
 	// SSO (user) errors
-	ErrCurrentPasswordRequired                      = errors.New("current password required")
-	ErrNoEmailChangesDetected                       = errors.New("no email changes detected")
-	ErrNoPasswordChangesDetected                    = errors.New("no password changes detected")
-	ErrNoNameChangesDetected                        = errors.New("no name changes detected")
-	ErrPasswordsDoNotMatch                          = errors.New("passwords do not match")
-	ErrInvalidCredentialsCurrentPasswordIsIncorrect = errors.New("invalid credentials, current password is incorrect")
+	ErrCurrentPasswordRequired    = errors.New("current password required")
+	ErrNoEmailChangesDetected     = errors.New("no email changes detected")
+	ErrNoPasswordChangesDetected  = errors.New("no password changes detected")
+	ErrNoNameChangesDetected      = errors.New("no name changes detected")
+	ErrPasswordsDoNotMatch        = errors.New("passwords do not match")
+	ErrCurrentPasswordIsIncorrect = errors.New("current password is incorrect")
 
 	// Chat errors
 	ErrChatNotFound = errors.New("chat not found")

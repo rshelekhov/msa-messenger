@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -19,14 +19,15 @@ func (h *Handler) GetChats() http.HandlerFunc {
 
 		params := &GetChatsParams{}
 		if err := render.Decode(r, params); err != nil {
-			err = fmt.Errorf("failed to decode request: %w", err)
-			handleBadRequestError(w, r, log, err)
+			log.Warn("failed to decode request", slog.String("error", err.Error()))
+			handleBadRequestError(w, r, ErrInvalidRequest)
 			return
 		}
 
 		chats, nextPageToken, err := h.chatUsecase.GetChats(ctx, params.PageToken)
 		if err != nil {
-			handleInternalError(w, r, log, err)
+			log.Error("failed to get chats", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -46,24 +47,28 @@ func (h *Handler) GetChat() http.HandlerFunc {
 
 		params := &GetChatsIdParams{}
 		if err := render.Decode(r, params); err != nil {
-			err = fmt.Errorf("failed to decode request: %w", err)
-			handleBadRequestError(w, r, log, err)
+			log.Warn("failed to decode request", slog.String("error", err.Error()))
+			handleBadRequestError(w, r, ErrInvalidRequest)
 			return
 		}
 
 		chatID := chi.URLParam(r, "id")
 		if chatID == "" {
-			handleBadRequestError(w, r, log, errors.New("chat ID is required"))
+			log.Warn("chat ID is required")
+			handleBadRequestError(w, r, ErrChatIDRequired)
 			return
 		}
 
 		chat, nextPageToken, err := h.chatUsecase.GetChat(ctx, chatID, params.PageToken)
 		if err != nil {
 			if errors.Is(err, domain.ErrChatNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to get chat", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrChatNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to get chat", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -83,7 +88,8 @@ func (h *Handler) SendMessage() http.HandlerFunc {
 
 		chatID := chi.URLParam(r, "id")
 		if chatID == "" {
-			handleBadRequestError(w, r, log, errors.New("chat ID is required"))
+			log.Warn("chat ID is required")
+			handleBadRequestError(w, r, ErrChatIDRequired)
 			return
 		}
 
@@ -95,10 +101,13 @@ func (h *Handler) SendMessage() http.HandlerFunc {
 		message, err := h.chatUsecase.SendMessage(ctx, chatID, req.Content)
 		if err != nil {
 			if errors.Is(err, domain.ErrChatNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to send message", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrChatNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to send message", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -118,16 +127,20 @@ func (h *Handler) DeleteChat() http.HandlerFunc {
 
 		chatID := chi.URLParam(r, "id")
 		if chatID == "" {
-			handleBadRequestError(w, r, log, errors.New("chat ID is required"))
+			log.Warn("chat ID is required")
+			handleBadRequestError(w, r, ErrChatIDRequired)
 			return
 		}
 
 		if err := h.chatUsecase.DeleteChat(ctx, chatID); err != nil {
 			if errors.Is(err, domain.ErrChatNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to delete chat", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrChatNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to delete chat", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 

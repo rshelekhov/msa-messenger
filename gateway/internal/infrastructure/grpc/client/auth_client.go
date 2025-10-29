@@ -30,7 +30,15 @@ func NewAuthClient(log *slog.Logger, conn *grpc.ClientConn, ssoService config.SS
 	}
 }
 
-func (a *AuthClient) RegisterUser(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error) {
+func (a *AuthClient) RegisterUser(
+	ctx context.Context,
+	user entity.UserCredentials,
+	device entity.UserDevice,
+) (
+	userID string,
+	tokens entity.UserTokens,
+	err error,
+) {
 	const op = "grpc.client.auth.RegisterUser"
 
 	req := &authv1.RegisterUserRequest{
@@ -74,7 +82,7 @@ func (a *AuthClient) RegisterUser(ctx context.Context, user entity.UserCredentia
 		Domain:           tokenData.Domain,
 		Path:             tokenData.Path,
 		ExpiresAt:        tokenData.ExpiresAt.AsTime(),
-		HttpOnly:         tokenData.HttpOnly,
+		HTTPOnly:         tokenData.HttpOnly,
 		AdditionalFields: tokenData.AdditionalFields,
 	}, nil
 }
@@ -120,7 +128,7 @@ func (a *AuthClient) Login(ctx context.Context, user entity.UserCredentials, dev
 		Domain:           tokenData.Domain,
 		Path:             tokenData.Path,
 		ExpiresAt:        tokenData.ExpiresAt.AsTime(),
-		HttpOnly:         tokenData.HttpOnly,
+		HTTPOnly:         tokenData.HttpOnly,
 		AdditionalFields: tokenData.AdditionalFields,
 	}, nil
 }
@@ -160,7 +168,7 @@ func (a *AuthClient) RefreshToken(ctx context.Context, refreshToken string, devi
 		Domain:           resp.GetTokenData().Domain,
 		Path:             resp.GetTokenData().Path,
 		ExpiresAt:        resp.GetTokenData().ExpiresAt.AsTime(),
-		HttpOnly:         resp.GetTokenData().HttpOnly,
+		HTTPOnly:         resp.GetTokenData().HttpOnly,
 		AdditionalFields: resp.GetTokenData().AdditionalFields,
 	}, nil
 }
@@ -279,7 +287,6 @@ func (a *AuthClient) mapSSOError(err error) error {
 		case commonv1.ErrorCode_ERROR_CODE_USER_DEVICE_NOT_FOUND:
 			return domain.ErrUserDeviceNotRegisteredOrAlreadyLoggedOut
 		}
-
 	}
 
 	// Fallback to gRPC code if no specific error code match

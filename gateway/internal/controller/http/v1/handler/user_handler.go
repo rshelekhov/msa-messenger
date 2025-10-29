@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -19,10 +19,13 @@ func (h *Handler) GetOwnProfile() http.HandlerFunc {
 		user, err := h.userUsecase.GetOwnProfile(ctx)
 		if err != nil {
 			if errors.Is(err, domain.ErrUserNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to get own profile", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrUserNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to get own profile", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -50,11 +53,23 @@ func (h *Handler) UpdateOwnProfile() http.HandlerFunc {
 		var err error
 		user.ID, err = h.userUsecase.UpdateOwnProfile(ctx, user)
 		if err != nil {
-			if errors.Is(err, domain.ErrUserNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+			errorMappings := map[error]int{
+				domain.ErrUserNotFound:               http.StatusNotFound,
+				domain.ErrInvalidRequest:             http.StatusBadRequest,
+				domain.ErrCurrentPasswordRequired:    http.StatusBadRequest,
+				domain.ErrNoEmailChangesDetected:     http.StatusBadRequest,
+				domain.ErrNoPasswordChangesDetected:  http.StatusBadRequest,
+				domain.ErrNoNameChangesDetected:      http.StatusBadRequest,
+				domain.ErrPasswordsDoNotMatch:        http.StatusBadRequest,
+				domain.ErrCurrentPasswordIsIncorrect: http.StatusBadRequest,
+				domain.ErrEmailAlreadyTaken:          http.StatusBadRequest,
+			}
+			if handleMappedError(w, r, err, log, "failed to update own profile", errorMappings) {
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to update own profile", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -75,10 +90,13 @@ func (h *Handler) DeleteOwnProfile() http.HandlerFunc {
 		err := h.userUsecase.DeleteOwnProfile(ctx)
 		if err != nil {
 			if errors.Is(err, domain.ErrUserNotFound) {
-				handleError(w, r, log, err, http.StatusNotFound)
+				log.Warn("failed to delete own profile", slog.String("error", err.Error()))
+				handleError(w, r, domain.ErrUserNotFound, http.StatusNotFound)
 				return
 			}
-			handleInternalError(w, r, log, err)
+
+			log.Error("failed to delete own profile", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 
@@ -95,14 +113,15 @@ func (h *Handler) SearchUsers() http.HandlerFunc {
 
 		params := &GetUsersSearchParams{}
 		if err := render.Decode(r, params); err != nil {
-			err = fmt.Errorf("failed to decode request: %w", err)
-			handleBadRequestError(w, r, log, err)
+			log.Warn("failed to decode request", slog.String("error", err.Error()))
+			handleBadRequestError(w, r, ErrInvalidRequest)
 			return
 		}
 
 		users, err := h.userUsecase.SearchUsers(ctx, params.Query)
 		if err != nil {
-			handleInternalError(w, r, log, err)
+			log.Error("failed to search users", slog.String("error", err.Error()))
+			handleInternalError(w, r)
 			return
 		}
 

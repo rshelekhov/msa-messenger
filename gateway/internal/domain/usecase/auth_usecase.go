@@ -25,7 +25,15 @@ func NewAuthUsecase(authClient AuthClient) *AuthUsecase {
 	return &AuthUsecase{authClient: authClient}
 }
 
-func (u *AuthUsecase) Register(ctx context.Context, user entity.UserCredentials, device entity.UserDevice) (userID string, tokens entity.UserTokens, err error) {
+func (u *AuthUsecase) Register(
+	ctx context.Context,
+	user entity.UserCredentials,
+	device entity.UserDevice,
+) (
+	userID string,
+	tokens entity.UserTokens,
+	err error,
+) {
 	return u.authClient.RegisterUser(ctx, user, device)
 }
 

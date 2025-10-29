@@ -15,6 +15,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	cfg := config.MustLoad[appConfig.Config]()
 
 	obsCfg, err := observability.NewConfig(
@@ -27,22 +31,14 @@ func main() {
 		})
 	if err != nil {
 		slog.Error("failed to create observability config", slog.String("error", err.Error()))
-		os.Exit(1)
+		return 1
 	}
 
 	obs, err := observability.Init(context.Background(), obsCfg)
 	if err != nil {
 		slog.Error("failed to init observability", slog.String("error", err.Error()))
-		os.Exit(1)
+		return 1
 	}
-
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := obs.Shutdown(ctx); err != nil {
-			slog.Error("failed to shutdown observability", slog.String("error", err.Error()))
-		}
-	}()
 
 	log := obs.Logger.With(slog.String("env", cfg.App.Env))
 
@@ -52,8 +48,16 @@ func main() {
 	application, err := app.New(cfg, log)
 	if err != nil {
 		log.Error("failed to initialize application", slog.String("error", err.Error()))
-		os.Exit(1)
+		return 1
 	}
+
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := obs.Shutdown(ctx); err != nil {
+			slog.Error("failed to shutdown observability", slog.String("error", err.Error()))
+		}
+	}()
 
 	go func() {
 		application.HTTPServer.MustRun()
@@ -68,8 +72,9 @@ func main() {
 
 	if err := application.Stop(); err != nil {
 		log.Error("failed to stop application", slog.String("error", err.Error()))
-		os.Exit(1)
+		return 1
 	}
 
 	log.Info("graceful shutdown completed")
+	return 0
 }

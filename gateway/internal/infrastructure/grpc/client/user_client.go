@@ -138,7 +138,7 @@ func (u *UserClient) mapUserError(err error) error {
 			return domain.ErrPasswordsDoNotMatch
 
 		case commonv1.ErrorCode_ERROR_CODE_INVALID_CREDENTIALS:
-			return domain.ErrInvalidCredentialsCurrentPasswordIsIncorrect
+			return domain.ErrCurrentPasswordIsIncorrect
 
 		case commonv1.ErrorCode_ERROR_CODE_EMAIL_ALREADY_TAKEN:
 			return domain.ErrEmailAlreadyTaken
