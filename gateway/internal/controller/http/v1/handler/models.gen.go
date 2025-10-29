@@ -64,6 +64,18 @@ const (
 	Pending  GetFriendInvitesParamsStatus = "pending"
 )
 
+// ChangePasswordRequest defines model for ChangePasswordRequest.
+type ChangePasswordRequest struct {
+	// UpdatedPassword New password. Must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)
+	UpdatedPassword string `json:"updated_password" validate:"required,min=8,max=255,password_regexp"`
+}
+
+// ChangePasswordResponse defines model for ChangePasswordResponse.
+type ChangePasswordResponse struct {
+	// Message Success message
+	Message string `json:"message"`
+}
+
 // Chat defines model for Chat.
 type Chat struct {
 	// CreatedAt When the chat was created
@@ -93,7 +105,7 @@ type ErrorResponse struct {
 	Description *string `json:"description,omitempty"`
 
 	// Error Error title
-	Error *string `json:"error,omitempty"`
+	Error string `json:"error"`
 }
 
 // FriendInvite defines model for FriendInvite.
@@ -177,6 +189,9 @@ type LoginResponseMobile struct {
 	// AccessToken Access token
 	AccessToken *string `json:"access_token,omitempty"`
 
+	// Id User ID
+	Id *string `json:"id,omitempty"`
+
 	// RefreshToken Refresh token
 	RefreshToken         *string                `json:"refresh_token,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
@@ -185,8 +200,17 @@ type LoginResponseMobile struct {
 // LoginResponseWeb Token response for web clients. Additional fields can be included in the response
 type LoginResponseWeb struct {
 	// AccessToken Access token
-	AccessToken          *string                `json:"access_token,omitempty"`
+	AccessToken *string `json:"access_token,omitempty"`
+
+	// Id User ID
+	Id                   *string                `json:"id,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// LogoutResponse defines model for LogoutResponse.
+type LogoutResponse struct {
+	// Message Success message
+	Message string `json:"message"`
 }
 
 // MessageRequest defines model for MessageRequest.
@@ -288,13 +312,31 @@ type RegisterResponseWeb struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// ResetPasswordRequest defines model for ResetPasswordRequest.
+type ResetPasswordRequest struct {
+	// Email Email must be a valid email address
+	Email string `json:"email" validate:"required,email,min=5,max=255"`
+}
+
+// ResetPasswordResponse defines model for ResetPasswordResponse.
+type ResetPasswordResponse struct {
+	// Message Success message
+	Message string `json:"message"`
+}
+
 // UpdateOwnProfileRequest defines model for UpdateOwnProfileRequest.
 type UpdateOwnProfileRequest struct {
+	// CurrentPassword Current password (optional). Password must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)
+	CurrentPassword *string `json:"current_password,omitempty" validate:"min=8,max=255,password_regexp"`
+
 	// Email Email (optional) must be a valid email address
 	Email *string `json:"email,omitempty" validate:"email,min=5,max=255"`
 
 	// Name Name (optional) must be a string between 1 and 255 characters
 	Name *string `json:"name,omitempty" validate:"min=1,max=255"`
+
+	// UpdatedPassword Updated password (optional). Password must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)
+	UpdatedPassword *string `json:"updated_password,omitempty" validate:"min=8,max=255,password_regexp"`
 }
 
 // UserResponse defines model for UserResponse.
@@ -309,10 +351,25 @@ type UserResponse struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// ValidationErrorResponse defines model for ValidationErrorResponse.
+type ValidationErrorResponse struct {
+	// Details Field-specific validation errors. Keys are field names, values are error messages
+	Details map[string]string `json:"details"`
+
+	// Error Error message
+	Error string `json:"error"`
+}
+
+// VerifyEmailResponse defines model for VerifyEmailResponse.
+type VerifyEmailResponse struct {
+	// Message Success message
+	Message string `json:"message"`
+}
+
 // ChatId defines model for chatId.
 type ChatId = string
 
-// ClientType Client type (web or mobile)
+// ClientType defines model for clientType.
 type ClientType string
 
 // FriendId defines model for friendId.
@@ -330,8 +387,20 @@ type InviteStatus string
 // PageToken defines model for pageToken.
 type PageToken = string
 
+// PasswordResetToken defines model for passwordResetToken.
+type PasswordResetToken = string
+
 // SearchQuery defines model for searchQuery.
 type SearchQuery = string
+
+// VerificationToken defines model for verificationToken.
+type VerificationToken = string
+
+// PostAuthChangePasswordParams defines parameters for PostAuthChangePassword.
+type PostAuthChangePasswordParams struct {
+	// Token Password reset token from email link
+	Token PasswordResetToken `form:"token" json:"token"`
+}
 
 // PostAuthLoginParams defines parameters for PostAuthLogin.
 type PostAuthLoginParams struct {
@@ -350,6 +419,12 @@ type PostAuthRegisterParams struct {
 
 // PostAuthRegisterParamsXClientType defines parameters for PostAuthRegister.
 type PostAuthRegisterParamsXClientType string
+
+// GetAuthVerifyEmailParams defines parameters for GetAuthVerifyEmail.
+type GetAuthVerifyEmailParams struct {
+	// Token Email verification token sent to user's email
+	Token VerificationToken `form:"token" json:"token"`
+}
 
 // GetChatsParams defines parameters for GetChats.
 type GetChatsParams struct {
@@ -393,6 +468,9 @@ type GetUsersSearchParams struct {
 	Query SearchQuery `form:"query" json:"query"`
 }
 
+// PostAuthChangePasswordJSONRequestBody defines body for PostAuthChangePassword for application/json ContentType.
+type PostAuthChangePasswordJSONRequestBody = ChangePasswordRequest
+
 // PostAuthLoginJSONRequestBody defines body for PostAuthLogin for application/json ContentType.
 type PostAuthLoginJSONRequestBody = LoginRequest
 
@@ -401,6 +479,9 @@ type PostAuthRefreshJSONRequestBody = RefreshTokenRequestMobile
 
 // PostAuthRegisterJSONRequestBody defines body for PostAuthRegister for application/json ContentType.
 type PostAuthRegisterJSONRequestBody = RegisterRequest
+
+// PostAuthResetPasswordJSONRequestBody defines body for PostAuthResetPassword for application/json ContentType.
+type PostAuthResetPasswordJSONRequestBody = ResetPasswordRequest
 
 // PostChatsIdJSONRequestBody defines body for PostChatsId for application/json ContentType.
 type PostChatsIdJSONRequestBody = MessageRequest
@@ -444,6 +525,14 @@ func (a *LoginResponseMobile) UnmarshalJSON(b []byte) error {
 		delete(object, "access_token")
 	}
 
+	if raw, found := object["id"]; found {
+		err = json.Unmarshal(raw, &a.Id)
+		if err != nil {
+			return fmt.Errorf("error reading 'id': %w", err)
+		}
+		delete(object, "id")
+	}
+
 	if raw, found := object["refresh_token"]; found {
 		err = json.Unmarshal(raw, &a.RefreshToken)
 		if err != nil {
@@ -475,6 +564,13 @@ func (a LoginResponseMobile) MarshalJSON() ([]byte, error) {
 		object["access_token"], err = json.Marshal(a.AccessToken)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'access_token': %w", err)
+		}
+	}
+
+	if a.Id != nil {
+		object["id"], err = json.Marshal(a.Id)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'id': %w", err)
 		}
 	}
 
@@ -527,6 +623,14 @@ func (a *LoginResponseWeb) UnmarshalJSON(b []byte) error {
 		delete(object, "access_token")
 	}
 
+	if raw, found := object["id"]; found {
+		err = json.Unmarshal(raw, &a.Id)
+		if err != nil {
+			return fmt.Errorf("error reading 'id': %w", err)
+		}
+		delete(object, "id")
+	}
+
 	if len(object) != 0 {
 		a.AdditionalProperties = make(map[string]interface{})
 		for fieldName, fieldBuf := range object {
@@ -550,6 +654,13 @@ func (a LoginResponseWeb) MarshalJSON() ([]byte, error) {
 		object["access_token"], err = json.Marshal(a.AccessToken)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'access_token': %w", err)
+		}
+	}
+
+	if a.Id != nil {
+		object["id"], err = json.Marshal(a.Id)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'id': %w", err)
 		}
 	}
 

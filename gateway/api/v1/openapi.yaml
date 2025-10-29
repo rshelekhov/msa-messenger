@@ -36,6 +36,12 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/LoginResponseWeb"
                   - $ref: "#/components/schemas/LoginResponseMobile"
+        "400":
+          description: Bad Request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
         "401":
           description: Unauthorized if invalid credentials
           content:
@@ -78,11 +84,11 @@ paths:
                   - $ref: "#/components/schemas/RegisterResponseWeb"
                   - $ref: "#/components/schemas/RegisterResponseMobile"
         "400":
-          description: Bad Request
+          description: Bad Request - Validation error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ValidationErrorResponse"
         "409":
           description: Conflict
           content:
@@ -125,11 +131,11 @@ paths:
                   - $ref: "#/components/schemas/RefreshTokenResponseWeb"
                   - $ref: "#/components/schemas/RefreshTokenResponseMobile"
         "400":
-          description: Bad Request
+          description: Bad Request - Validation error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ValidationErrorResponse"
         "401":
           description: Unauthorized
           content:
@@ -154,8 +160,116 @@ paths:
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/verify-email:
+    get:
+      summary: "Verify Email"
+      description: "Verify user email address using token from email link"
+      tags:
+        - "auth"
+      parameters:
+        - $ref: "#/components/parameters/verificationToken"
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyEmailResponse"
+        "400":
+          description: Bad Request - Invalid or missing token, or token expired and email was resent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/reset-password:
+    post:
+      summary: "Reset Password"
+      description: "Reset user password using email"
+      tags:
+        - "auth"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetPasswordResponse"
+        "400":
+          description: Bad Request - Invalid email or token expired and email was resent
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationErrorResponse"
+                  - $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/change-password:
+    post:
+      summary: "Change Password"
+      description: "Change user password using reset token from email. Token is provided as query parameter (e.g., /auth/change-password?token=TOKEN)"
+      tags:
+        - "auth"
+      parameters:
+        - $ref: "#/components/parameters/passwordResetToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangePasswordResponse"
+        "400":
+          description: Bad Request - Invalid token or password
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationErrorResponse"
+                  - $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized - Token expired or invalid
           content:
             application/json:
               schema:
@@ -220,6 +334,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Bad Request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
         "401":
           description: Unauthorized
           content:
@@ -448,7 +568,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationErrorResponse"
+                  - $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
           content:
@@ -640,7 +762,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationErrorResponse"
+                  - $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
           content:
@@ -749,6 +873,8 @@ components:
   schemas:
     ErrorResponse:
       type: object
+      required:
+        - error
       properties:
         error:
           type: string
@@ -756,6 +882,23 @@ components:
         description:
           type: string
           description: "Error description"
+    ValidationErrorResponse:
+      type: object
+      required:
+        - error
+        - details
+      properties:
+        error:
+          type: string
+          description: "Error message"
+        details:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Field-specific validation errors. Keys are field names, values are error messages"
+          example:
+            email: "invalid email format"
+            password: "must be at least 8 characters"
     LoginRequest:
       type: object
       properties:
@@ -778,6 +921,9 @@ components:
       type: object
       description: "Token response for web clients. Additional fields can be included in the response"
       properties:
+        id:
+          type: string
+          description: "User ID"
         access_token:
           type: string
           description: "Access token"
@@ -786,6 +932,9 @@ components:
       type: object
       description: "Token response for mobile clients. Additional fields can be included in the response"
       properties:
+        id:
+          type: string
+          description: "User ID"
         access_token:
           type: string
           description: "Access token"
@@ -895,6 +1044,20 @@ components:
           description: "Email (optional) must be a valid email address"
           x-oapi-codegen-extra-tags:
             validate: "email,min=5,max=255"
+        current_password:
+          type: string
+          format: password
+          description: "Current password (optional). Password must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)"
+          pattern: "^[A-Za-z\\d@$!%*?&]{8,}$"
+          x-oapi-codegen-extra-tags:
+            validate: "min=8,max=255,password_regexp"
+        updated_password:
+          type: string
+          format: password
+          description: "Updated password (optional). Password must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)"
+          pattern: "^[A-Za-z\\d@$!%*?&]{8,}$"
+          x-oapi-codegen-extra-tags:
+            validate: "min=8,max=255,password_regexp"
     UserResponse:
       type: object
       properties:
@@ -1045,6 +1208,60 @@ components:
         id:
           type: string
           description: "ID of the created friend invite"
+    VerifyEmailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "Success message"
+      required:
+        - message
+    ChangePasswordRequest:
+      type: object
+      properties:
+        updated_password:
+          type: string
+          format: password
+          description: "New password. Must contain at least 8 characters and can only include Latin letters (A-Z, a-z), digits (0-9), and special characters (@, $, !, %, *, ?, &)"
+          pattern: "^[A-Za-z\\d@$!%*?&]{8,}$"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=8,max=255,password_regexp"
+      required:
+        - updated_password
+    ChangePasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "Success message"
+      required:
+        - message
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: "Email must be a valid email address"
+          x-oapi-codegen-extra-tags:
+            validate: "required,email,min=5,max=255"
+      required:
+        - email
+    ResetPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "Success message"
+      required:
+        - message
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "Success message"
+      required:
+        - message
   parameters:
     clientType:
       name: X-Client-Type
@@ -1112,6 +1329,20 @@ components:
       schema:
         type: string
       description: "Friend Invite ID"
+    verificationToken:
+      name: token
+      in: query
+      required: true
+      schema:
+        type: string
+      description: "Email verification token sent to user's email"
+    passwordResetToken:
+      name: token
+      in: query
+      required: true
+      schema:
+        type: string
+      description: "Password reset token from email link"
 
 tags:
   - name: "auth"
